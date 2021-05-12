@@ -95,7 +95,7 @@ export class Profiles extends ProfilesCache {
                     error,
                     theProfile.name,
                     localize("checkCurrentProfile.error", "Error encountered in ") +
-                        `checkCurrentProfile.optionalProfiles!`
+                    `checkCurrentProfile.optionalProfiles!`
                 );
                 return profileStatus;
             }
@@ -1323,7 +1323,7 @@ export class Profiles extends ProfilesCache {
         } catch (error) {
             this.log.error(
                 localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") +
-                    JSON.stringify(error)
+                JSON.stringify(error)
             );
             await errorHandling(error, profileName, error.message);
             throw error;
@@ -1359,7 +1359,12 @@ export class Profiles extends ProfilesCache {
             return undefined;
         }
 
-        return this.validateAndParseUrl(zosURL);
+        const validUrl = this.validateAndParseUrl(zosURL);
+        if (zosURL.includes("443")) {
+            // tslint:disable-next-line:no-magic-numbers
+            validUrl.port = 443;
+        }
+        return validUrl;
     }
 
     private async getUrl(urlInputBox): Promise<string | undefined> {
