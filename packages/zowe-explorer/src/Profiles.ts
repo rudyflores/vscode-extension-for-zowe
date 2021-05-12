@@ -33,6 +33,7 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
+    IUrlValidator,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem, resolveQuickPickHelper, isTheia } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -539,7 +540,7 @@ export class Profiles extends ProfilesCache {
         let newUser: string;
         let newPass: string;
         let newRU: boolean;
-        let newUrl: any;
+        let newUrl: IUrlValidator;
         let newPort: number;
 
         const newProfileName = profileName.trim();
@@ -579,6 +580,11 @@ export class Profiles extends ProfilesCache {
                     schemaValues[value] = newUrl.host;
                     if (newUrl.port !== 0) {
                         schemaValues.port = newUrl.port;
+                    }
+                    // tslint:disable-next-line:no-console
+                    console.log(newUrl);
+                    if (newUrl.protocol) {
+                        schemaValues.protocol = newUrl.protocol;
                     }
                     break;
                 case "port":
@@ -666,6 +672,10 @@ export class Profiles extends ProfilesCache {
                             schemaValues[value] = isTrue;
                             break;
                         default:
+                            // Check for protocol value and use URL input if entered
+                            if (value === "protocol" && schemaValues.protocol) {
+                                break;
+                            }
                             options = await this.optionsValue(value, schema);
                             const defValue = await vscode.window.showInputBox(options);
                             if (defValue === undefined) {
