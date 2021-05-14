@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration } from "@zowe/imperative";
+import { IProfileLoaded, Session, ICommandArguments, ICommandProfileTypeConfiguration, Logger } from "@zowe/imperative";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -85,6 +85,28 @@ export namespace ZoweExplorerApi {
     }
 
     /**
+     * API for logging errors with the extension.
+     * @export
+     */
+    export interface ILogger extends ICommon {
+        /**
+         * Log an error to the VSCode console.
+         *
+         * @param {string} errorMessage
+         * @param {Logger} log
+         */
+        logError(errorMessage: string, log: Logger);
+
+        /**
+         * Log an error to the VSCode console, and show the user a VSCode error message.
+         *
+         * @param {string} errorMessage
+         * @param {Logger} log
+         */
+        logAndRevealError(errorMessage: string, log: Logger);
+    }
+
+    /**
      * API for providing a USS API handler to the extension.
      * @export
      */
@@ -98,7 +120,7 @@ export namespace ZoweExplorerApi {
          *     as well as the list of results in apiResponse.items with
          *     minimal properties name, mode.
          */
-        fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse>;
+        fileList(ussFilePath: string, log: Logger): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Check th USS chtag to see if a file requires conversion.
@@ -106,7 +128,7 @@ export namespace ZoweExplorerApi {
          * @param {string} ussFilePath
          * @returns {Promise<boolean>}
          */
-        isFileTagBinOrAscii(ussFilePath: string): Promise<boolean>;
+        isFileTagBinOrAscii(ussFilePath: string, log: Logger): Promise<boolean>;
 
         /**
          * Retrieve the contents of a USS file.

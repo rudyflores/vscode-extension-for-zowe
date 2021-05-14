@@ -10,8 +10,9 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Session, SessConstants, IProfileLoaded, ICommandArguments } from "@zowe/imperative";
+import { Session, SessConstants, IProfileLoaded, ICommandArguments, Logger } from "@zowe/imperative";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import * as vscode from "vscode";
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
@@ -104,6 +105,21 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 
     public logout(session: Session): Promise<void> {
         return zowe.Logout.apimlLogout(session);
+    }
+}
+
+/**
+ * An implementation of the Zowe Explorer USS API interface for zOSMF.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+export class ZosmfLoggerApi extends ZosmfApiCommon implements ZoweExplorerApi.ILogger {
+    public logError(errorMessage: string, log: Logger) {
+        log.error(errorMessage);
+    }
+
+    public logAndRevealError(errorMessage: string, log: Logger) {
+        vscode.window.showErrorMessage(errorMessage);
+        log.error(errorMessage);
     }
 }
 
