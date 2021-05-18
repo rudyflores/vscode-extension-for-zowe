@@ -92,7 +92,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             const profCache = new ProfilesCache(globals.LOG);
             await profCache.activateKeytarApis(false, globals.ISTHEIA);
         } catch (err) {
-            throw new ImperativeError({ msg: err.toString() });
+            await ZoweExplorerApiRegister.getLoggerApi().logError(localize("test.error", err.message), globals.LOG);
+            // throw new ImperativeError({ msg: err.toString() });
         }
 
         // Ensure that ~/.zowe folder exists
@@ -117,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         );
         globals.LOG.error(
             localize("initialize.log.error", "Error encountered while activating and initializing logger! ") +
-            JSON.stringify(err)
+                JSON.stringify(err)
         );
     }
 
@@ -167,11 +168,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
                     "onDidSaveTextDocument1",
                     "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                 ) +
-                savedFile.fileName +
-                localize("onDidSaveTextDocument2", " against directory ") +
-                globals.DS_DIR +
-                localize("onDidSaveTextDocument3", "and") +
-                globals.USS_DIR
+                    savedFile.fileName +
+                    localize("onDidSaveTextDocument2", " against directory ") +
+                    globals.DS_DIR +
+                    localize("onDidSaveTextDocument3", "and") +
+                    globals.USS_DIR
             );
             if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                 globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
@@ -182,8 +183,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             } else {
                 globals.LOG.debug(
                     localize("activate.didSaveText.file", "File ") +
-                    savedFile.fileName +
-                    localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                        savedFile.fileName +
+                        localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                 );
             }
         });

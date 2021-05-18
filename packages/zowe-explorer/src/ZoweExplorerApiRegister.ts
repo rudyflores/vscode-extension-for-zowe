@@ -10,7 +10,14 @@
  */
 
 import { IProfileLoaded } from "@zowe/imperative";
-import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi, ZosmfCommandApi } from "@zowe/zowe-explorer-api";
+import {
+    ZoweExplorerApi,
+    ZosmfLoggerApi,
+    ZosmfUssApi,
+    ZosmfMvsApi,
+    ZosmfJesApi,
+    ZosmfCommandApi,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 
 import * as nls from "vscode-nls";
@@ -34,6 +41,15 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public static getInstance(): ZoweExplorerApiRegister {
         return ZoweExplorerApiRegister.register;
+    }
+
+    /**
+     * Static lookup of an API for USS for a given profile.
+     * @param {IProfileLoaded} a profile to be used with this instance of the API returned
+     * @returns an instance of the API that uses the profile provided
+     */
+    public static getLoggerApi(): ZoweExplorerApi.ILogger {
+        return ZoweExplorerApiRegister.getInstance().getLoggerApi();
     }
 
     /**
@@ -97,6 +113,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     private static register: ZoweExplorerApiRegister = new ZoweExplorerApiRegister();
 
     // These are the different API registries currently available to extenders
+    private loggerApiImplementations = new Map<string, ZoweExplorerApi.ILogger>();
     private ussApiImplementations = new Map<string, ZoweExplorerApi.IUss>();
     private mvsApiImplementations = new Map<string, ZoweExplorerApi.IMvs>();
     private jesApiImplementations = new Map<string, ZoweExplorerApi.IJes>();
@@ -107,6 +124,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
      */
     private constructor() {
+        this.registerLoggerApi(new ZosmfLoggerApi());
         this.registerUssApi(new ZosmfUssApi());
         this.registerMvsApi(new ZosmfMvsApi());
         this.registerJesApi(new ZosmfJesApi());
@@ -116,6 +134,14 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     // TODO: the redundant functions that follow could be done with generics, but as we are using
     // interfaces here that do not have type meta data it would require that they have type info
     // added. On the other these functions make the client code easier to read and understand.
+
+    /**
+     * Other VS Code extension need to call this to register their USS API implementation.
+     * @param {ZoweExplorerApi.IUss} ussApi
+     */
+    public registerLoggerApi(loggerApi: ZoweExplorerApi.ILogger): void {
+        this.loggerApiImplementations.set("default", loggerApi);
+    }
 
     /**
      * Other VS Code extension need to call this to register their USS API implementation.
@@ -193,12 +219,22 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public registeredApiTypes(): string[] {
         return [
             ...new Set([
+                ...this.registeredLoggerApiTypes(),
                 ...this.registeredUssApiTypes(),
                 ...this.registeredMvsApiTypes(),
                 ...this.registeredJesApiTypes(),
                 ...this.registeredCommandApiTypes(),
             ]),
         ];
+    }
+
+    /**
+     * Get an array of all the registered Logger APIs identified by the CLI profile types,
+     * such as ["zosmf", "ftp"].
+     * @returns {string[]}
+     */
+    public registeredLoggerApiTypes(): string[] {
+        return [...this.loggerApiImplementations.keys()];
     }
 
     /**
@@ -235,6 +271,16 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
      */
     public registeredCommandApiTypes(): string[] {
         return [...this.commandApiImplementations.keys()];
+    }
+
+    /**
+     * Lookup of an API implementation for USS for a given profile.
+     * @param {IProfileLoaded} profile
+     * @returns an instance of the API for the profile provided
+     */
+    public getLoggerApi(): ZoweExplorerApi.ILogger {
+        // create a clone of the API object
+        return Object.create(this.loggerApiImplementations.get("default"));
     }
 
     /**
